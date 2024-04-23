@@ -50,7 +50,7 @@ async function downloadCVEData() {
     return response.data.result.CVE_Items || [];
   } catch (error) {
     console.error("Failed to download CVE data:", error);
-    throw error;
+    throw new Error(`Failed to fetch data: ${error.response?.status} ${error.response?.statusText}`);
   }
 }
 
