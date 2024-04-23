@@ -1,0 +1,19 @@
+kind: source
+spec:
+  name: "nist-cve-plugin"
+  registry: "cloudquery"
+  path: "localhost:8080"
+  version: "v1.0.0"
+  tables:
+    - "cves"
+  destinations:
+    - "sqlite"
+
+---
+kind: destination
+spec:
+  name: sqlite
+  path: cloudquery/sqlite
+  version: "v2.8.2"
+  spec:
+    connection_string: "file:./cve_database.db?mode=rwc"

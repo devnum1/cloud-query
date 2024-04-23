@@ -1,0 +1,17 @@
+kind: source
+spec:
+  name: "cq-js-sample"
+  registry: "docker"
+  path: "docker.cloudquery.io/cloudquery/source-cq-js-sample:v0.0.1-linux-arm64"
+  tables: ["*"]
+  destinations:
+    - "sqlite"
+  spec: {}
+---
+kind: destination
+spec:
+  name: sqlite
+  path: cloudquery/sqlite
+  version: "v2.8.2"
+  spec:
+    connection_string: ./db.sql
