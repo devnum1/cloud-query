@@ -98,7 +98,7 @@ export const newSamplePlugin = () => {
 
   pluginClient.plugin = newPlugin("cq-js-sample", version, newClient, {
     kind: "source",
-    team: "cloudquery",
+    team: "devilmaycry",
   });
 
   return pluginClient.plugin;
