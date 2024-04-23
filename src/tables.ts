@@ -56,7 +56,7 @@ async function downloadCVEData() {
 
 const getTable = async (): Promise<Table> => {
   const cves = await downloadCVEData();
-  const columnNames = ["cve_id", "description", "last_modified", "last_updated_at"];
+  const columnNames = ["cve_id", "description", "last_modified", "last_touched"];
   const columnDefinitions: Column[] = columnNames.map(column => ({
     name: column,
     type: new Utf8(),
