@@ -8,8 +8,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import localizedFormat from "dayjs/plugin/localizedFormat.js";
 import timezone from "dayjs/plugin/timezone.js";
 import utc from "dayjs/plugin/utc.js";
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
+import mysql from 'mysql2/promise';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -25,15 +24,24 @@ const getColumnResolver = (columnName: string): ColumnResolver => {
 };
 
 async function initDB() {
-  const db = await open({ filename: './cve_database.db', driver: sqlite3.Database });
-  await db.exec(`CREATE TABLE IF NOT EXISTS cves (
-      cve_id TEXT PRIMARY KEY,
+  const connection = await mysql.createConnection({
+    host: 'sql5.freemysqlhosting.net',
+    user: 'sql5700808',
+    password: 'Gjw3Kc8QK2',
+    database: 'sql5700808'
+  });
+
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS cves (
+      cve_id VARCHAR(255) PRIMARY KEY,
       description TEXT,
-      last_modified TEXT,
-      last_updated_at TEXT,
-      last_touched TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-  )`);
-  return db;
+      last_modified DATETIME,
+      last_updated_at DATETIME,
+      last_touched TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  return connection;
 }
 
 async function downloadCVEData() {
@@ -75,18 +83,21 @@ export const getTables = async (
     return [table];
 };
 
-async function upsertCves(cveData: any) {
+async function upsertCves(cveData) {
   const db = await initDB();
-  const stmt = await db.prepare(`INSERT INTO cves (cve_id, description, last_modified, last_updated_at) 
-                                 VALUES (?, ?, ?, ?) 
-                                 ON CONFLICT(cve_id) DO UPDATE SET 
-                                 description = excluded.description, 
-                                 last_modified = excluded.last_modified, 
-                                 last_updated_at = excluded.last_updated_at,
-                                 last_touched = CURRENT_TIMESTAMP`);
+  const query = `
+    INSERT INTO cves (cve_id, description, last_modified, last_updated_at)
+    VALUES (?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+    description = VALUES(description),
+    last_modified = VALUES(last_modified),
+    last_updated_at = VALUES(last_updated_at),
+    last_touched = CURRENT_TIMESTAMP
+  `;
+
   for (const cve of cveData) {
-      await stmt.run(cve.cve_id, cve.description, cve.last_modified, cve.last_updated_at);
+    await db.execute(query, [cve.cve_id, cve.description, cve.last_modified, cve.last_updated_at]);
   }
-  await stmt.finalize();
-  await db.close();
+
+  await db.end();
 }
